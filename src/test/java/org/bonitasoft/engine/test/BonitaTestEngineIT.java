@@ -15,21 +15,21 @@
 
 package org.bonitasoft.engine.test;
 
-/**
- * @author Baptiste Mesta
- */
-public class TestAPI {
 
-    private TestAPI(){
+import java.io.IOException;
 
-    }
+import org.bonitasoft.engine.exception.BonitaException;
+import org.junit.Test;
 
-    /**
-     *  initialize a running engine in the current jvm
-     * @return the test api
-     */
-    public static TestAPI setupLocalEngine(){
-        return new TestAPI();
+public class BonitaTestEngineIT {
+
+
+    @Test
+    public void initialize_local_engine() throws IOException, BonitaException {
+        BonitaTestEngine bonitaTestEngine = BonitaTestEngine.defaultLocalEngine();
+
+        bonitaTestEngine.create();
+        bonitaTestEngine.start();
     }
 
 }
