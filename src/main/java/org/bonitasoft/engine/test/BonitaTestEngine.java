@@ -24,10 +24,24 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bonitasoft.engine.api.ApiAccessType;
+import org.bonitasoft.engine.api.CommandAPI;
+import org.bonitasoft.engine.api.IdentityAPI;
+import org.bonitasoft.engine.api.LoginAPI;
+import org.bonitasoft.engine.api.PermissionAPI;
 import org.bonitasoft.engine.api.PlatformAPI;
 import org.bonitasoft.engine.api.PlatformAPIAccessor;
 import org.bonitasoft.engine.api.PlatformLoginAPI;
+import org.bonitasoft.engine.api.ProcessAPI;
+import org.bonitasoft.engine.api.ProfileAPI;
+import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.api.ThemeAPI;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
+import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
+import org.bonitasoft.engine.bpm.process.ProcessDefinition;
+import org.bonitasoft.engine.bpm.process.ProcessDeployException;
+import org.bonitasoft.engine.bpm.process.ProcessEnablementException;
 import org.bonitasoft.engine.commons.io.IOUtil;
+import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.ServerAPIException;
@@ -35,6 +49,7 @@ import org.bonitasoft.engine.exception.UnknownAPITypeException;
 import org.bonitasoft.engine.platform.PlatformLoginException;
 import org.bonitasoft.engine.platform.PlatformLogoutException;
 import org.bonitasoft.engine.platform.StartNodeException;
+import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.session.PlatformSession;
 import org.bonitasoft.engine.session.SessionNotFoundException;
 import org.bonitasoft.engine.util.APITypeManager;
@@ -50,6 +65,21 @@ public class BonitaTestEngine {
     private final boolean createPlatform;
     private final boolean local;
     private ClassPathXmlApplicationContext springContext;
+
+
+    private APISession session;
+
+    private ProcessAPI processAPI;
+
+    private IdentityAPI identityAPI;
+
+    private CommandAPI commandAPI;
+
+    private ProfileAPI profileAPI;
+
+    private ThemeAPI themeAPI;
+
+    private PermissionAPI permissionAPI;
 
     private BonitaTestEngine(boolean local, boolean createPlatform) {
         this.local = local;
@@ -86,7 +116,7 @@ public class BonitaTestEngine {
 
     public void start() throws StartNodeException {
         try {
-            PlatformSession session = login();
+            PlatformSession session = loginPlatform();
             PlatformAPI platformAPI = PlatformAPIAccessor.getPlatformAPI(session);
             platformAPI.startNode();
         } catch (BonitaHomeNotSetException e) {
@@ -98,27 +128,28 @@ public class BonitaTestEngine {
         } catch (PlatformLoginException e) {
             throw new StartNodeException(e);
         }
+        started = true;
     }
     public void stop() {
 
     }
 
     private void createPlatform() throws BonitaException {
-        final PlatformSession session = login();
+        final PlatformSession session = loginPlatform();
         final PlatformAPI platformAPI = PlatformAPIAccessor.getPlatformAPI(session);
         if (!platformAPI.isPlatformCreated()) {
             platformAPI.createPlatform();
         }
         platformAPI.initializePlatform();
-        logout(session);
+        logoutPlatform(session);
     }
 
-    private void logout(PlatformSession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException, PlatformLogoutException, SessionNotFoundException {
+    private void logoutPlatform(PlatformSession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException, PlatformLogoutException, SessionNotFoundException {
         final PlatformLoginAPI platformLoginAPI = PlatformAPIAccessor.getPlatformLoginAPI();
         platformLoginAPI.logout(session);
     }
 
-    private PlatformSession login() throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException, PlatformLoginException {
+    private PlatformSession loginPlatform() throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException, PlatformLoginException {
         final PlatformLoginAPI platformLoginAPI = PlatformAPIAccessor.getPlatformLoginAPI();
         return platformLoginAPI.login("platformAdmin", "platform");
     }
@@ -152,5 +183,88 @@ public class BonitaTestEngine {
     }
 
 
+    public ProcessDefinition deploy(String value) {
+        try {
+            return getProcessAPI().deployAndEnableProcess(BusinessArchiveFactory.readBusinessArchive(new File(value)));
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
 
+    }
+
+
+
+    public LoginAPI getLoginAPI() throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        return TenantAPIAccessor.getLoginAPI();
+    }
+
+    public ProcessAPI getProcessAPI() {
+        return processAPI;
+    }
+
+    public void setProcessAPI(final ProcessAPI processAPI) {
+        this.processAPI = processAPI;
+    }
+
+    public IdentityAPI getIdentityAPI() {
+        return identityAPI;
+    }
+
+    public void setIdentityAPI(final IdentityAPI identityAPI) {
+        this.identityAPI = identityAPI;
+    }
+
+    public CommandAPI getCommandAPI() {
+        return commandAPI;
+    }
+
+    public void setCommandAPI(final CommandAPI commandAPI) {
+        this.commandAPI = commandAPI;
+    }
+
+    public ProfileAPI getProfileAPI() {
+        return profileAPI;
+    }
+
+    public void setProfileAPI(final ProfileAPI profileAPI) {
+        this.profileAPI = profileAPI;
+    }
+
+    public ThemeAPI getThemeAPI() {
+        return themeAPI;
+    }
+
+    public void setThemeAPI(final ThemeAPI themeAPI) {
+        this.themeAPI = themeAPI;
+    }
+
+    public PermissionAPI getPermissionAPI() {
+        return permissionAPI;
+    }
+
+    public void setPermissionAPI(final PermissionAPI permissionAPI) {
+        this.permissionAPI = permissionAPI;
+    }
+
+    public APISession getSession() {
+        return session;
+    }
+
+    public void setSession(final APISession session) {
+        this.session = session;
+    }
+    public void login() throws BonitaException {
+        final LoginAPI loginAPI = getLoginAPI();
+        setSession(loginAPI.login("install", "install"));
+        setAPIs();
+    }
+
+    protected void setAPIs() throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        setIdentityAPI(TenantAPIAccessor.getIdentityAPI(getSession()));
+        setProcessAPI(TenantAPIAccessor.getProcessAPI(getSession()));
+        setCommandAPI(TenantAPIAccessor.getCommandAPI(getSession()));
+        setProfileAPI(TenantAPIAccessor.getProfileAPI(getSession()));
+        setThemeAPI(TenantAPIAccessor.getThemeAPI(getSession()));
+        setPermissionAPI(TenantAPIAccessor.getPermissionAPI(getSession()));
+    }
 }

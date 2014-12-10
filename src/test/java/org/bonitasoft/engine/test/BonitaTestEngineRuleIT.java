@@ -16,24 +16,34 @@
 package org.bonitasoft.engine.test;
 
 
+import java.io.File;
+
 import org.bonitasoft.engine.api.LoginAPI;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
+import org.bonitasoft.engine.bpm.process.ProcessDefinition;
+import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.session.APISession;
-import org.junit.Rule;
+import org.bonitasoft.engine.test.annotations.BusinessArchive;
+import org.bonitasoft.engine.test.annotations.Engine;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(BonitaEngineTestRunner.class)
 public class BonitaTestEngineRuleIT {
 
-    @Rule
-    public BonitaTestEngineRule bonitaTestEngineRule = BonitaTestEngineRule.defaultLocalEngine();
+    @Engine
+    public BonitaTestEngine engine;
+
+    @BusinessArchive(resource = "/home/baptiste/Desktop/plop.bar")
+    public ProcessDefinition processDefinition;
 
     @Test
     public void check_started_with_annotation() throws Exception {
+        engine.getProcessAPI().startProcess(processDefinition.getId());
+        System.out.println(processDefinition.getName());
 
-        LoginAPI loginAPI = TenantAPIAccessor.getLoginAPI();
-        APISession session = loginAPI.login("install", "install");
-        ProcessAPI processAPI = TenantAPIAccessor.getProcessAPI(session);
-        processAPI.getNumberOfCategories();
     }
 }
