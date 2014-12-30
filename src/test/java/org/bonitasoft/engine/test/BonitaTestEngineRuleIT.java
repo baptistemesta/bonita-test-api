@@ -16,16 +16,7 @@
 package org.bonitasoft.engine.test;
 
 
-import java.io.File;
-
-import org.bonitasoft.engine.api.LoginAPI;
-import org.bonitasoft.engine.api.ProcessAPI;
-import org.bonitasoft.engine.api.TenantAPIAccessor;
-import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
-import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
 import org.bonitasoft.engine.bpm.process.ProcessDefinition;
-import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
-import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.test.annotations.BusinessArchive;
 import org.bonitasoft.engine.test.annotations.Engine;
 import org.junit.Test;
