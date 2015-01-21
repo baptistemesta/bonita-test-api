@@ -57,19 +57,28 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
             System.out.println("========");
             System.out.println(field.getName());
             System.out.println(field.getType());
-            for(Annotation annotation : field.getDeclaredAnnotations()) {
+            for (Annotation annotation : field.getDeclaredAnnotations()) {
                 System.out.println(annotation);
                 System.out.println(annotation.annotationType());
-                if(annotation.annotationType().equals(BusinessArchive.class)){
+                if (annotation.annotationType().equals(BusinessArchive.class)) {
                     //deploy
                     field.setAccessible(true);
-                    businessArchives.put(field,((BusinessArchive)annotation).resource());
+                    businessArchives.put(field, ((BusinessArchive) annotation).resource());
                 }
-                if(annotation.annotationType().equals(Engine.class)){
+                if (annotation.annotationType().equals(Engine.class)) {
                     //deploy
                     field.setAccessible(true);
                     engineField = field;
-                    engine = BonitaTestEngine.defaultLocalEngine();
+                    Engine engineAnnotation = (Engine) annotation;
+                    String type = engineAnnotation.type();
+                    String url = engineAnnotation.url();
+                    String name = engineAnnotation.name();
+
+                    if (type == null || type.isEmpty() || type.equals("LOCAL")) {
+                        engine = BonitaTestEngine.defaultLocalEngine();
+                    } else if (type.equals("HTTP")) {
+                        engine = BonitaTestEngine.remoteHttp(url, name);
+                    }
                 }
             }
         }
@@ -78,11 +87,11 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
     @Override
     protected Object createTest() throws Exception {
         Object test = super.createTest();
-        if(engineField != null){
-            engineField.set(test,engine);
+        if (engineField != null) {
+            engineField.set(test, engine);
         }
         for (Map.Entry<Field, ProcessDefinition> fieldProcessDefinitionEntry : processes.entrySet()) {
-            fieldProcessDefinitionEntry.getKey().set(test,fieldProcessDefinitionEntry.getValue());
+            fieldProcessDefinitionEntry.getKey().set(test, fieldProcessDefinitionEntry.getValue());
         }
         return test;
     }
@@ -98,6 +107,7 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
 
     private Statement withGlobalBefore(final Statement statement) {
         return new Statement() {
+
             @Override
             public void evaluate() throws Throwable {
                 launchTheEngine();
@@ -111,12 +121,12 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
         for (Map.Entry<Field, String> fieldStringEntry : businessArchives.entrySet()) {
             Field key = fieldStringEntry.getKey();
             String value = fieldStringEntry.getValue();
-            processes.put(key,engine.deploy(value));
+            processes.put(key, engine.deploy(value));
         }
     }
 
     private void launchTheEngine() throws IOException, BonitaException {
-        if(engine != null){
+        if (engine != null) {
 
             engine.create();
             engine.start();
@@ -126,6 +136,7 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
 
     private Statement withGlobalAfter(final Statement statement) {
         return new Statement() {
+
             @Override
             public void evaluate() throws Throwable {
                 statement.evaluate();
@@ -140,11 +151,10 @@ public class BonitaEngineTestRunner extends BlockJUnit4ClassRunner {
     }
 
     private void stopTheEngine() {
-        if(engine != null){
+        if (engine != null) {
             engine.stop();
             engine.destroy();
         }
     }
-
 
 }

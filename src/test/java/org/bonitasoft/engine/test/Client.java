@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,21 +13,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.bonitasoft.engine.test.annotations;
+package org.bonitasoft.engine.test;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
-/**
- * @author Baptiste Mesta
- */
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Engine {
+import org.bonitasoft.engine.bpm.process.ProcessDefinition;
+import org.bonitasoft.engine.test.annotations.BusinessArchive;
+import org.bonitasoft.engine.test.annotations.Engine;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-    String type() default "";
+@RunWith(BonitaEngineTestRunner.class)
+public class Client {
 
-    String url() default "";
+    @Engine(type = "HTTP", url = "http://localhost:8080", name = "bonita")
+    public BonitaTestEngine engine;
 
-    String name() default "";
 
+    @Test
+    public void run() throws Exception {
+        engine.login();
+        System.out.println(engine.getProcessAPI().getNumberOfProcessDeploymentInfos());
+    }
 }

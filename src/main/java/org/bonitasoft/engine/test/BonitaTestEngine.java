@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bonitasoft.engine.api.ApiAccessType;
@@ -90,6 +91,14 @@ public class BonitaTestEngine {
     public static BonitaTestEngine defaultLocalEngine() {
         APITypeManager.setAPITypeAndParams(ApiAccessType.LOCAL, Collections.<String, String>emptyMap());
         return new BonitaTestEngine(true, true);
+    }
+
+    public static BonitaTestEngine remoteHttp(String url, String name) {
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put("server.url", url);
+        parameters.put("application.name", name);
+        APITypeManager.setAPITypeAndParams(ApiAccessType.HTTP, parameters);
+        return new BonitaTestEngine(false, false);
     }
 
     public boolean isStarted() {
