@@ -16,8 +16,6 @@
 package org.bonitasoft.engine.test;
 
 
-import org.bonitasoft.engine.bpm.process.ProcessDefinition;
-import org.bonitasoft.engine.test.annotations.BusinessArchive;
 import org.bonitasoft.engine.test.annotations.Engine;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +30,7 @@ public class Client {
     @Test
     public void run() throws Exception {
         engine.login();
-        System.out.println(engine.getProcessAPI().getNumberOfProcessDeploymentInfos());
+//       engine.getProcessAPI().evaluateExpressionOnProcessDefinition(new )
+
     }
 }
